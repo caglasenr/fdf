@@ -18,6 +18,7 @@ static void fill_map(char *file_name, t_data *data)
     int fd = open(file_name,O_RDONLY);
     char *line;
     int y = 0;
+    
     while((line = get_next_line(fd))!=NULL)
     {
         char **arr = ft_split(line,' ');
@@ -25,6 +26,7 @@ static void fill_map(char *file_name, t_data *data)
         while(arr[x])
         {
             data->map[y][x] = ft_atoi(arr[x]);
+            
             x++;
         }
         int i = 0;
