@@ -36,5 +36,6 @@ int get_height(char *file_name);
 int get_width(char *line);
 void parse_map(char *file_name, t_data *data);
 void draw_map(t_mlx *mlx);
-void create_points(t_data *data);
+void create_points(t_data *data, char *file_name);
+int get_color(char *token);
 #endif

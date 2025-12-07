@@ -33,7 +33,16 @@
 //     return 0;
 // }
 #include <mlx.h>
-
+#include <stdlib.h>
+static int close_esc(int keykode, t_mlx *mlx)
+{
+    if(keykode == 65307)
+    {
+        mlx_destroy_window(mlx->mlx,mlx->mlx);
+        exit(0);
+    }
+    return 0;
+}
 int main(int ac, char *av[])
 {
     t_data data;
@@ -45,7 +54,7 @@ int main(int ac, char *av[])
     parse_map(av[1], &data);
     printf("deneme\n");
 
-    create_points(&data);
+    create_points(&data,av[1]);
     printf("deneme\n");
 
 
@@ -61,6 +70,7 @@ int main(int ac, char *av[])
     mlx.offset_y = 200;
 
     draw_map(&mlx);
+    mlx_key_hook(mlx.win,close_esc,&mlx);
     
     mlx_loop(mlx.mlx);
 

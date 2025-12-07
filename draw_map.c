@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "mlx.h"
+#include "get_next_line.h"
 //virgülden sonra rengi al
 float ft_fabs(float x)
 {
@@ -9,14 +10,20 @@ float ft_fabs(float x)
         return -x;
     return x;
 }
-void create_points(t_data *data)
+#include <fcntl.h>
+
+void create_points(t_data *data, char *file_name)
 {
     int y = 0;
     int x;
     data->points = malloc(sizeof(t_point)*data->height);
-    while(y<data->height)
+    int fd = open(file_name,O_RDONLY);
+    char *line;
+    while((line = get_next_line(fd)) != NULL)
     {
-        data->points[y] = malloc(sizeof(t_point)*data->width[y]);
+        char **arr = ft_split(line,' ');
+        int width = data->width[y];
+        data->points[y] = malloc(sizeof(t_point)*width);
         x = 0;
         while(x<data->width[y])
         {
@@ -24,7 +31,7 @@ void create_points(t_data *data)
             data->points[y][x].y = y;
             data->points[y][x].z = data->map[y][x];
 
-            data->points[y][x].color = 0xFFFFFF;
+            data->points[y][x].color = get_color(arr[x]);
             x++;
         }
         y++;
