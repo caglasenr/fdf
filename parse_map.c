@@ -49,7 +49,8 @@ void parse_map(char *file_name, t_data *data)
 
     data->height = get_height(file_name);
     data->width = malloc(sizeof(int)*data->height);
-
+    if(!data->width)
+        exit(1);
     fd = open(file_name,O_RDONLY);
     while((line = get_next_line(fd)) != NULL)
     {
