@@ -35,6 +35,14 @@ typedef struct s_mlx
     int endian; // endianness bak
 } t_mlx;
 
+typedef struct s_bounds
+{
+	int	min_x;
+	int	max_x;
+	int	min_y;
+	int	max_y;
+}	t_bounds;
+
 int invalid_file(char *file_name);
 char **ft_split(char *str, char c);
 int ft_atoi(char *str);
