@@ -26,16 +26,16 @@ void create_points(t_data *data, char *file_name)
 {
     int y = 0;
     int x;
-    data->points = malloc(sizeof(t_point)*data->height);
+    data->points = malloc(sizeof(t_point)*data->height); // nULL konttrolü var
     if(!data->points)
         exit(1);
-    int fd = open(file_name,O_RDONLY);
+    int fd = open(file_name,O_RDONLY); // kontrol
     if(fd<0)
         exit(1);
     char *line;
     while((line = get_next_line(fd)) != NULL)
     {
-        char **arr = ft_split(line,' ');
+        char **arr = ft_split(line,' '); // kontrol
         if(!arr)
         {
             free(line);
@@ -44,7 +44,7 @@ void create_points(t_data *data, char *file_name)
 
         }
         int width = data->width[y];
-        data->points[y] = malloc(sizeof(t_point)*width);
+        data->points[y] = malloc(sizeof(t_point)*width); //kontrol
         if(!data->points[y])
             exit(1);
         x = 0;
@@ -102,9 +102,13 @@ static void draw_line(t_mlx *mlx,t_point point_1, t_point point_2,int color)
 }
 void draw_map(t_mlx *mlx)
 {
-    for (int y = 0; y < mlx->data->height; y++)
+    int x;
+    int y;
+    y = 0;
+    while (y < mlx->data->height)
     {
-        for (int x = 0; x < mlx->data->width[y]; x++)
+        x = 0;
+        while (x < mlx->data->width[y])
         {
             t_point p = mlx->data->points[y][x];
             iso_project(&p, mlx->zoom, mlx->offset_x, mlx->offset_y);
@@ -122,7 +126,9 @@ void draw_map(t_mlx *mlx)
                 iso_project(&down, mlx->zoom, mlx->offset_x, mlx->offset_y);
                 draw_line(mlx, p, down, p.color);
             }
+            x++;
         }
+        y++;
     }
 }
 static void calc_bounds(t_mlx *mlx, int *min_x, int *max_x, int *min_y, int *max_y,int zoom)

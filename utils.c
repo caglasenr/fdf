@@ -10,7 +10,6 @@ int invalid_file(char *file_name)
         i++;
     if(i<5)
         return 1;
-    //a.fdf
     if(file_name[i-4] == '.' && file_name[i-3] == 'f' 
         && file_name[i-2] == 'd' && file_name[i-1] == 'f')
         return 1;
@@ -53,9 +52,9 @@ int get_width(char *line)
 {
     int width = 0;
     char **arr;
-    arr = ft_split(line,' ');
+    arr = ft_split(line,' '); //kontrol et
     if(!arr)
-        return 0;
+        exit(1);
     while(arr[width])
         width ++;
     int i = 0;
@@ -99,59 +98,4 @@ int get_color(char *token)
     if(token[i] == '\0')
         return 0xFFFFFF;
     return ft_hex_to_int(token + i + 3);
-}
-void free_data_map(t_data *data)
-{
-    int i;
-    if(!data)
-        return ;
-    if(data->map)
-    {
-        i=0;
-        while( i <data->height)
-        {
-            free(data->map[i]);
-            i++;
-        }
-        free(data->map);
-        data->map = NULL;
-    }
-    if(data->width)
-    {
-        free(data->width);
-        data->width = NULL;
-    }
-    if(data->points)
-    {
-        i = 0;
-        while(i < data->height)
-        {
-            free(data->points[i]);
-            i++;
-        }
-        
-    }
-    free(data->points);
-    data->points = NULL;
-}
-int exit_program(t_mlx *mlx)
-{
-    free_data_map(mlx->data);
-    if(mlx->win)
-        mlx_destroy_window(mlx->mlx, mlx->win);
-    exit(0);
-    return 0;
-}
-void free_split(char **str)
-{
-    int i;
-    if(str == NULL)
-        return;
-    i = 0;
-    while(str[i])
-    {
-        free(str[i]);
-        i++;
-    }
-    free(str);
 }

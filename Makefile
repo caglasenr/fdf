@@ -7,7 +7,8 @@ SRCS = main.c \
        ft_split.c \
        utils.c \
 	   parse_map.c \
-	   draw_map.c 
+	   draw_map.c \
+	   free_func.c
 
 GNL_DIR = get_next_line/
 GNL_SRCS = $(GNL_DIR)get_next_line.c \

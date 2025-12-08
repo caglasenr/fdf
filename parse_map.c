@@ -5,10 +5,14 @@
 static int **alloc_map(int height, int *width)
 {
     int **map = malloc(sizeof(int*)*height);
+    if(!map)
+        exit(1);
     int i = 0;
     while(i<height)
     {
         map[i] = malloc(sizeof(int)*width[i]);
+        if(!map[i])
+        exit(1);
         i++;
     }
     return map;
@@ -16,12 +20,16 @@ static int **alloc_map(int height, int *width)
 static void fill_map(char *file_name, t_data *data)
 {
     int fd = open(file_name,O_RDONLY);
+    if(fd<0)
+        exit(1);
     char *line;
     int y = 0;
     
     while((line = get_next_line(fd))!=NULL)
     {
         char **arr = ft_split(line,' ');
+        if(!arr)
+            exit(1);
         int x =0;
         while(arr[x])
         {
@@ -52,6 +60,8 @@ void parse_map(char *file_name, t_data *data)
     if(!data->width)
         exit(1);
     fd = open(file_name,O_RDONLY);
+    if(fd<0)
+        exit(1);
     while((line = get_next_line(fd)) != NULL)
     {
         data->width[y] = get_width(line);
@@ -60,6 +70,8 @@ void parse_map(char *file_name, t_data *data)
     }
     close(fd);
     data->map = alloc_map(data->height,data->width);
+    if(!data->map)
+        exit(1);
     fill_map(file_name,data);
     
 }
