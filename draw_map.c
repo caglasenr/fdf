@@ -1,243 +1,196 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   draw_map.c                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: csener <csener@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/12/08 20:01:36 by csener            #+#    #+#             */
-/*   Updated: 2025/12/08 20:32:45 by csener           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "fdf.h"
+#include <math.h>
+#include <stdlib.h>
+#include "mlx.h"
+#include "get_next_line.h"
 #include <fcntl.h>
 
-static void	pixel_put(t_mlx *mlx, int x, int y, int color)
-{
-	char	*dst;
+//virgülden sonra rengi al
 
-	if (x >= 0 && x < 1000 && y >= 0 && y < 800)
-	{
-		dst = mlx->addr + (y * mlx->line_len) + (x * (mlx->bpp / 8));
-		*(unsigned int *)dst = color;
-	}
+static void pixel_put(t_mlx *mlx, int x, int y, int color)
+{
+    char *dst;
+    if(x >= 0 && x < 1000 && y>= 0 && y < 800)
+    {
+        dst = mlx->addr + (y * mlx->line_len) + (x * (mlx->bpp / 8));
+        *(unsigned int*)dst = color;
+    }
 }
-
-static float	ft_fabs(float x)
+static float ft_fabs(float x)
 {
-	if (x < 0)
-		return (-x);
-	return (x);
+    if(x<0)
+        return -x;
+    return x;
 }
-
-static char	**safe_split(char *line, int fd)
+void create_points(t_data *data, char *file_name)
 {
-	char	**arr;
+    int y = 0;
+    int x;
+    data->points = malloc(sizeof(t_point)*data->height); // nULL konttrolü var
+    if(!data->points)
+        exit(1);
+    int fd = open(file_name,O_RDONLY); // kontrol
+    if(fd<0)
+        exit(1);
+    char *line;
+    while((line = get_next_line(fd)) != NULL)
+    {
+        char **arr = ft_split(line,' '); // kontrol
+        if(!arr)
+        {
+            free(line);
+            close(fd);
+            exit(1);
 
-	arr = ft_split(line, ' ');
-	if (!arr)
-	{
-		free(line);
-		close(fd);
-		exit(1);
-	}
-	return (arr);
+        }
+        int width = data->width[y];
+        data->points[y] = malloc(sizeof(t_point)*width); //kontrol
+        if(!data->points[y])
+            exit(1);
+        x = 0;
+        while(x<data->width[y])
+        {
+            data->points[y][x].x = x;
+            data->points[y][x].y = y;
+            data->points[y][x].z = data->map[y][x];
+
+            data->points[y][x].color = get_color(arr[x]);
+            x++;
+        }
+        free_split(arr);
+        free(line);
+        y++;
+    }
+    close(fd);
 }
-
-static void	fill_points_row(t_data *data, char **arr, int y)
+static void iso_project(t_point *point, int zoom, int offset_x, int offset_y)
 {
-	int	x;
+    float x = point->x;
+    float y = point->y;
+    float z = point->z;
+    
+    float iso_x = (x - y) * cos(0.523599);
+    float iso_y = (x + y) * sin(0.523599) - z * 0.2;  // Z'yi azalt (0.2 ile çarp)
 
-	x = 0;
-	while (x < data->width[y])
-	{
-		data->points[y][x].x = x;
-		data->points[y][x].y = y;
-		data->points[y][x].z = data->map[y][x];
-		data->points[y][x].color = get_color(arr[x]);
-		x++;
-	}
+    point->x = iso_x * zoom + offset_x;
+    point->y = iso_y * zoom + offset_y;
 }
-
-static void	clean_func(char **arr, char *line)
+static void draw_line(t_mlx *mlx,t_point point_1, t_point point_2,int color)
 {
-	free_split(arr);
-	free(line);
+    float dx = point_2.x - point_1.x;
+    float dy = point_2.y - point_1.y;
+
+    float steps;
+    if(ft_fabs(dx)>ft_fabs(dy))
+        steps = ft_fabs(dx);
+    else
+        steps = ft_fabs(dy);
+        
+    float x_inc = dx /steps;
+    float y_inc = dy /steps;
+    float x = point_1.x;
+    float y = point_1.y;
+    int i = 0;
+    while(i<steps)
+    {
+        pixel_put(mlx,(int)x,(int)y,color);
+        x += x_inc;
+        y += y_inc;
+        i++;
+    }
+
 }
-
-void	create_points(t_data *data, char *file_name)
+void draw_map(t_mlx *mlx)
 {
-	int		fd;
-	int		y;
-	char	*line;
-	char	**arr;
+    int x;
+    int y;
+    y = 0;
+    while (y < mlx->data->height)
+    {
+        x = 0;
+        while (x < mlx->data->width[y])
+        {
+            t_point p = mlx->data->points[y][x];
+            iso_project(&p, mlx->zoom, mlx->offset_x, mlx->offset_y);
 
-	fd = open(file_name, O_RDONLY);
-	if (fd < 0)
-		exit(1);
-	data->points = malloc(sizeof(t_point *) * data->height);
-	if (!data->points)
-		exit(1);
-	y = 0;
-	line = get_next_line(fd);
-	while (line)
-	{
-		arr = safe_split(line, fd);
-		data->points[y] = malloc(sizeof(t_point) * data->width[y]);
-		if (!data->points[y])
-			exit(1);
-		fill_points_row(data, arr, y);
-		clean_func(arr, line);
-		line = get_next_line(fd);
-		y++;
-	}
-	close(fd);
+            if (x + 1 < mlx->data->width[y])
+            {
+                t_point right = mlx->data->points[y][x + 1];
+                iso_project(&right, mlx->zoom, mlx->offset_x, mlx->offset_y);
+                draw_line(mlx, p, right, p.color);
+            }
+
+            if (y + 1 < mlx->data->height && mlx->data->width[y + 1] > x )
+            {
+                t_point down = mlx->data->points[y + 1][x];
+                iso_project(&down, mlx->zoom, mlx->offset_x, mlx->offset_y);
+                draw_line(mlx, p, down, p.color);
+            }
+            x++;
+        }
+        y++;
+    }
 }
-
-static void	iso_project(t_point *p, int zoom, int ox, int oy)
+static void calc_bounds(t_mlx *mlx, int *min_x, int *max_x, int *min_y, int *max_y,int zoom)
 {
-	float	x;
-	float	y;
-	float	z;
+    int x, y;
+    t_point p;
 
-	x = p->x;
-	y = p->y;
-	z = p->z;
-	p->x = (x - y) * cos(0.523599) * zoom + ox;
-	p->y = ((x + y) * sin(0.523599) - z * 0.2) * zoom + oy;
+    *min_x = 1000000;
+    *min_y = 1000000;
+    *max_x = -1000000;
+    *max_y = -1000000;
+
+    y = 0;
+    while (y < mlx->data->height)
+    {
+        x = 0;
+        while (x < mlx->data->width[y])
+        {
+            p = mlx->data->points[y][x];
+            iso_project(&p, zoom, 0, 0);
+
+            if (p.x < *min_x) *min_x = p.x;
+            if (p.y < *min_y) *min_y = p.y;
+            if (p.x > *max_x) *max_x = p.x;
+            if (p.y > *max_y) *max_y = p.y;
+            x++;
+        }
+        y++;
+    }
 }
-
-static float	get_steps(float dx, float dy)
+void auto_fit_and_center(t_mlx *mlx)
 {
-	if (ft_fabs(dx) > ft_fabs(dy))
-		return (ft_fabs(dx));
-	return (ft_fabs(dy));
-}
+    int min_x, max_x, min_y, max_y;
+    int map_w, map_h;
+    int win_w = 1000;
+    int win_h = 800;
 
-static void	draw_line(t_mlx *mlx, t_point a, t_point b, int color)
-{
-	float	dx;
-	float	dy;
-	float	steps;
-	float	x;
-	float	y;
+    // 1. Önce zoom=1 ile haritanın boyutunu hesapla
+    calc_bounds(mlx, &min_x, &max_x, &min_y, &max_y,1);
 
-	dx = b.x - a.x;
-	dy = b.y - a.y;
-	steps = get_steps(dx, dy);
-	x = a.x;
-	y = a.y;
-	while (steps-- >= 0)
-	{
-		pixel_put(mlx, (int)x, (int)y, color);
-		x += dx / (steps + 1);
-		y += dy / (steps + 1);
-	}
-}
+    map_w = max_x - min_x;
+    map_h = max_y - min_y;
 
-static void	draw_connections(t_mlx *mlx, t_point point, int x, int y)
-{
-	t_point	right;
-	t_point	down;
+    if (map_w == 0) map_w = 1;
+    if (map_h == 0) map_h = 1;
 
-	if (x + 1 < mlx->data->width[y])
-	{
-		right = mlx->data->points[y][x + 1];
-		iso_project(&right, mlx->zoom, mlx->offset_x, mlx->offset_y);
-		draw_line(mlx, point, right, point.color);
-	}
-	if (y + 1 < mlx->data->height && mlx->data->width[y + 1] > x)
-	{
-		down = mlx->data->points[y + 1][x];
-		iso_project(&down, mlx->zoom, mlx->offset_x, mlx->offset_y);
-		draw_line(mlx, point, down, point.color);
-	}
-}
+    // 2. Ekrana sığması için zoom hesapla
+    int zoom_x = (win_w * 0.8) / map_w; // %80 kullan
+    int zoom_y = (win_h * 0.8) / map_h;
 
-void	draw_map(t_mlx *mlx)
-{
-	int		x;
-	int		y;
-	t_point	point;
+    if(zoom_x < zoom_y)
+        mlx->zoom =zoom_x;
+    else
+        mlx->zoom = zoom_y;
+        
+    if (mlx->zoom < 1)
+        mlx->zoom = 1;
 
-	y = 0;
-	while (y < mlx->data->height)
-	{
-		x = 0;
-		while (x < mlx->data->width[y])
-		{
-			point = mlx->data->points[y][x];
-			iso_project(&point, mlx->zoom, mlx->offset_x, mlx->offset_y);
-			draw_connections(mlx, point, x, y);
-			x++;
-		}
-		y++;
-	}
-}
+    // 3. Yeni zoom ile tekrar sınırları hesapla
+    calc_bounds(mlx, &min_x, &max_x, &min_y, &max_y,mlx->zoom);
 
-static	void	update_bounds(t_bounds *b, t_point p)
-{
-	if (p.x < b->min_x)
-		b->min_x = p.x;
-	if (p.y < b->min_y)
-		b->min_y = p.y;
-	if (p.x > b->max_x)
-		b->max_x = p.x;
-	if (p.y > b->max_y)
-		b->max_y = p.y;
-}
-
-static void	calc_bounds(t_mlx *mlx, t_bounds *b, int zoom)
-{
-	int		x;
-	int		y;
-	t_point	p;
-
-	b->min_x = 1000000;
-	b->min_y = 1000000;
-	b->max_x = -1000000;
-	b->max_y = -1000000;
-	y = 0;
-	while (y < mlx->data->height)
-	{
-		x = 0;
-		while (x < mlx->data->width[y])
-		{
-			p = mlx->data->points[y][x];
-			iso_project(&p, zoom, 0, 0);
-			update_bounds(b, p);
-			x++;
-		}
-		y++;
-	}
-}
-
-static void	calc_zoom(t_mlx *mlx, t_bounds *b)
-{
-	int	map_w;
-	int	map_h;
-
-	map_w = b->max_x - b->min_x;
-	map_h = b->max_y - b->min_y;
-	if (map_w == 0)
-		map_w = 1;
-	if (map_h == 0)
-		map_h = 1;
-	mlx->zoom = (1000 * 0.8) / map_w;
-	if (mlx->zoom > (800 * 0.8) / map_h)
-		mlx->zoom = (800 * 0.8) / map_h;
-	if (mlx->zoom < 1)
-		mlx->zoom = 1;
-}
-
-void	auto_fit_and_center(t_mlx *mlx)
-{
-	t_bounds	b;
-
-	calc_bounds(mlx, &b, 1);
-	calc_zoom(mlx, &b);
-	calc_bounds(mlx, &b, mlx->zoom);
-	mlx->offset_x = (1000 - (b.max_x + b.min_x)) / 2;
-	mlx->offset_y = (800 - (b.max_y + b.min_y)) / 2;
+    // 4. Ortala
+    mlx->offset_x = (win_w - (max_x + min_x)) / 2;
+    mlx->offset_y = (win_h - (max_y + min_y)) / 2;
 }
