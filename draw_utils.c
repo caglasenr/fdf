@@ -6,7 +6,7 @@
 /*   By: csener <csener@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 17:57:55 by csener            #+#    #+#             */
-/*   Updated: 2025/12/09 19:00:05 by csener           ###   ########.fr       */
+/*   Updated: 2025/12/09 19:18:21 by csener           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ void	pixel_put(t_mlx *mlx, int x, int y, int color)
 {
 	char	*dst;
 
-	if (x >= 0 && x < 2000 && y >= 0 && y < 2000)
+	if (x >= 0 && x < WIN_WIDTH && y >= 0 && y < WIN_HEIGHT)
 	{
 		dst = mlx->addr + (y * mlx->line_len) + (x * (mlx->bpp / 8));
 		*(unsigned int *)dst = color;

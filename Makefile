@@ -6,6 +6,7 @@ MLX_FLAGS = -Lminilibx-linux -lmlx -lXext -lX11 -lm
 SRCS = main.c \
        ft_split.c \
        utils.c \
+       color.c \
        parse_map.c \
        auto_fit.c \
        create_points.c \

@@ -6,7 +6,7 @@
 /*   By: csener <csener@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 18:02:47 by csener            #+#    #+#             */
-/*   Updated: 2025/12/09 18:57:54 by csener           ###   ########.fr       */
+/*   Updated: 2025/12/09 19:19:53 by csener           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,8 +64,8 @@ void	auto_fit_and_center(t_mlx *mlx)
 		map_w = 1;
 	if (map_h == 0)
 		map_h = 1;
-	zoom_x = (1000 * 0.8) / map_w;
-	zoom_y = (800 * 0.8) / map_h;
+	zoom_x = (WIN_WIDTH * 0.8) / map_w;
+	zoom_y = (WIN_HEIGHT * 0.8) / map_h;
 	if (zoom_x < zoom_y)
 		mlx->zoom = zoom_x;
 	else
@@ -73,6 +73,6 @@ void	auto_fit_and_center(t_mlx *mlx)
 	if (mlx->zoom < 1)
 		mlx->zoom = 1;
 	calc_bounds(mlx, &bounds, mlx->zoom);
-	mlx->offset_x = (1000 - (bounds.max_x + bounds.min_x)) / 2;
-	mlx->offset_y = (800 - (bounds.max_y + bounds.min_y)) / 2;
+	mlx->offset_x = (WIN_WIDTH - (bounds.max_x + bounds.min_x)) / 2;
+	mlx->offset_y = (WIN_HEIGHT - (bounds.max_y + bounds.min_y)) / 2;
 }

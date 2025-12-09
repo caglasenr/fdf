@@ -6,7 +6,7 @@
 /*   By: csener <csener@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 18:35:17 by csener            #+#    #+#             */
-/*   Updated: 2025/12/09 18:35:41 by csener           ###   ########.fr       */
+/*   Updated: 2025/12/09 19:13:58 by csener           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ static int	is_sep(char c, char sep)
 	return (c == sep);
 }
 
-int	word_count(char *str, char c)
+static int	word_count(char *str, char c)
 {
 	int	i;
 	int	count;
